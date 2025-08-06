@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: restic-backup
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: restic-backup
+            image: busybox:1.28
+            imagePullPolicy: IfNotPresent
+            command:
+            - backup.sh
+          restartPolicy: OnFailure
+          envFrom:
+          - secretRef:
+            name: restic-secret
+          - configMapRef:
+            name: restic-config
+          env:
+            - name: PGHOST
+              valueFrom:
+                secretKeyRef:
+                  name: cluster-example-app
+                  key: host
+            - name: PGPORT
+              valueFrom:
+                secretKeyRef:
+                  name: cluster-example-app
+                  key: port
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: cluster-example-app
+                  key: user
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cluster-example-app
+                  key: password
+            - name: PGDBNAME
+              valueFrom:
+                secretKeyRef:
+                  name: cluster-example-app
+                  key: dbname
