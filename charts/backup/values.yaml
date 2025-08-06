@@ -1,0 +1,13 @@
+backups:
+  - name: example
+    namespace: default
+    db-app-config: cluster-example-app
+    restic-secret-name: restic-secret
+    schedule: "0 0 * * *"
+
+restic-keep:
+  hourly: 24
+  daily: 7
+  weekly: 4
+  monthly: 12
+  yearly: 7

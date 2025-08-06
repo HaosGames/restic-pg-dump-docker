@@ -1,0 +1,4 @@
+resources:
+- backup-cronjob.yaml
+- restic-config.yaml
+- restic-secret.yaml

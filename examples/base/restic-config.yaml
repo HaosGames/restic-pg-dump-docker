@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: restic-config
+data:
+  RESTIC_KEEP_HOURLY: 24
+  RESTIC_KEEP_DAILY: 7
+  RESTIC_KEEP_WEEKLY: 4
+  RESTIC_KEEP_MONTHLY: 12
+  RESTIC_KEEP_YEARLY: 7

@@ -2,8 +2,6 @@
 
 set -e
 
-setup.sh
-
 echo "Forgetting old snapshots"
 while ! restic forget \
 		--compact \
