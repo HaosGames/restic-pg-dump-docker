@@ -1,0 +1,61 @@
+{{- range $i, $value := .Values.configmaps }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: restic-backup-{{ $value.name }}
+  namespace: {{ $value.namespace }}
+spec:
+  schedule: {{ $value.schedule }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: restic-backup
+            image: ghcr.io/haosgames/restic-pg-dump-docker:latest
+            imagePullPolicy: IfNotPresent
+            command:
+            - backup.sh
+          restartPolicy: OnFailure
+          envFrom:
+          - secretRef:
+            name: {{ $value.restic-secret-name }}
+          env:
+            - name: PGHOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $value.db-app-config }}
+                  key: host
+            - name: PGPORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $value.db-app-config }}
+                  key: port
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $value.db-app-config }}
+                  key: user
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $value.db-app-config }}
+                  key: password
+            - name: PGDATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $value.db-app-config }}
+                  key: dbname
+            - name: RESTIC_KEEP_HOURLY
+              value: {{ .Values.restic-keep.hourly }}
+            - name: RESTIC_KEEP_DAILY
+              value: {{ .Values.restic-keep.daily }}
+            - name: RESTIC_KEEP_WEEKLY
+              value: {{ .Values.restic-keep.weekly }}
+            - name: RESTIC_KEEP_MONTHLY
+              value: {{ .Values.restic-keep.monthly }}
+            - name: RESTIC_KEEP_YEARLY
+              value: {{ .Values.restic-keep.yearly }}
+
+{{- end }}
