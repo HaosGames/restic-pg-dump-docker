@@ -33,7 +33,7 @@ jobs:
     - name: Chart | Push
       uses: appany/helm-oci-chart-releaser@v0.5.0
       with:
-        name: restic-pg-dump-docker
+        name: pg-dump-restic-backup-chart
         repository: haosgames/restic-pg-dump-docker
         tag: 0.1.0
         path: charts/backup # Default charts/{name}
