@@ -24,3 +24,18 @@ jobs:
       run: |
         docker build -t ghcr.io/haosgames/restic-pg-dump-docker:latest .
         docker push ghcr.io/haosgames/restic-pg-dump-docker:latest
+
+  push-helmchart:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Chart | Push
+      uses: appany/helm-oci-chart-releaser@v0.5.0
+      with:
+        name: restic-pg-dump-docker
+        repository: haosgames/restic-pg-dump-docker
+        tag: 0.1.0
+        path: charts/backup # Default charts/{name}
+        registry: ghcr.io
+        registry_username: hasgames
+        registry_password: ${{ secrets.GITHUB_TOKEN }}
