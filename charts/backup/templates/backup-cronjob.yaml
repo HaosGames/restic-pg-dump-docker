@@ -1,4 +1,4 @@
-{{- range $i, $value := .Values.configmaps }}
+{{- range $i, $value := .Values.backups }}
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -6,7 +6,7 @@ metadata:
   name: restic-backup-{{ $value.name }}
   namespace: {{ $value.namespace }}
 spec:
-  schedule: {{ $value.schedule }}
+  schedule: {{ $value.schedule | quote }}
   jobTemplate:
     spec:
       template:
@@ -17,45 +17,44 @@ spec:
             imagePullPolicy: IfNotPresent
             command:
             - backup.sh
-          restartPolicy: OnFailure
-          envFrom:
-          - secretRef:
-            name: {{ $value.restic-secret-name }}
-          env:
+            envFrom:
+            - secretRef:
+                name: {{ $value.resticSecretName }}
+            env:
             - name: PGHOST
               valueFrom:
                 secretKeyRef:
-                  name: {{ $value.db-app-config }}
+                  name: {{ $value.dbAppConfig }}
                   key: host
             - name: PGPORT
               valueFrom:
                 secretKeyRef:
-                  name: {{ $value.db-app-config }}
+                  name: {{ $value.dbAppConfig }}
                   key: port
             - name: PGUSER
               valueFrom:
                 secretKeyRef:
-                  name: {{ $value.db-app-config }}
+                  name: {{ $value.dbAppConfig }}
                   key: user
             - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ $value.db-app-config }}
+                  name: {{ $value.dbAppConfig }}
                   key: password
             - name: PGDATABASE
               valueFrom:
                 secretKeyRef:
-                  name: {{ $value.db-app-config }}
+                  name: {{ $value.dbAppConfig }}
                   key: dbname
             - name: RESTIC_KEEP_HOURLY
-              value: {{ .Values.restic-keep.hourly }}
+              value: "24"
             - name: RESTIC_KEEP_DAILY
-              value: {{ .Values.restic-keep.daily }}
+              value: "7"
             - name: RESTIC_KEEP_WEEKLY
-              value: {{ .Values.restic-keep.weekly }}
+              value: "4"
             - name: RESTIC_KEEP_MONTHLY
-              value: {{ .Values.restic-keep.monthly }}
+              value: "12"
             - name: RESTIC_KEEP_YEARLY
-              value: {{ .Values.restic-keep.yearly }}
-
+              value: "4"
+          restartPolicy: OnFailure
 {{- end }}
