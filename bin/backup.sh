@@ -46,4 +46,4 @@ echo 'Finished sending database dumps to S3'
 
 rm -rf "/pg_dump"
 
-./prune.sh
+prune.sh
