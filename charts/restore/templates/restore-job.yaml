@@ -1,0 +1,49 @@
+{{- range $i, $value := .Values.restores }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: restic-restore-{{ $value.name }}
+  namespace: {{ $value.namespace }}
+spec:
+  template:
+    spec:
+      containers:
+      - name: restic-backup
+        image: ghcr.io/haosgames/restic-pg-dump-docker:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - restore.sh
+        envFrom:
+        - secretRef:
+            name: {{ $value.resticSecretName }}
+        env:
+        - name: DB_RESTIC_NAME
+          value: {{ $value.namespace }}-{{ $value.name }}
+        - name: PGHOST
+          valueFrom:
+            secretKeyRef:
+              name: {{ $value.dbAppConfig }}
+              key: host
+        - name: PGPORT
+          valueFrom:
+            secretKeyRef:
+              name: {{ $value.dbAppConfig }}
+              key: port
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: {{ $value.dbAppConfig }}
+              key: user
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ $value.dbAppConfig }}
+              key: password
+        - name: PGDATABASE
+          valueFrom:
+            secretKeyRef:
+              name: {{ $value.dbAppConfig }}
+              key: dbname
+      restartPolicy: OnFailure
+{{- end }}

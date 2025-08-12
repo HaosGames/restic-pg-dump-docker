@@ -1,5 +1,5 @@
 restores:
   - name: example
     namespace: default
-    dbAppConfig: cluster-example-app
+    dbAppConfig: cluster-restored-app
     resticSecretName: restic-secret

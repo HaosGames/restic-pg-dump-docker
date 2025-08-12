@@ -1,0 +1,5 @@
+# restores:
+#   - name: example
+#     namespace: default
+#     dbAppConfig: cluster-example-app
+#     resticSecretName: restic-secret
