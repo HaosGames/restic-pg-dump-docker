@@ -1,6 +1,6 @@
-backups:
-  - name: example
-    namespace: default
-    dbAppConfig: cluster-example-app
-    resticSecretName: restic-secret
-    schedule: "0 0 * * *"
+# backups:
+#   - name: example
+#     namespace: default
+#     dbAppConfig: cluster-example-app
+#     resticSecretName: restic-secret
+#     schedule: "0 0 * * *"

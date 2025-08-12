@@ -47,14 +47,14 @@ spec:
                   name: {{ $value.dbAppConfig }}
                   key: dbname
             - name: RESTIC_KEEP_HOURLY
-              value: "24"
+              value: '{{ ($value.resticKeep).hourly | default "24" }}'
             - name: RESTIC_KEEP_DAILY
-              value: "7"
+              value: '{{ ($value.resticKeep).daily | default "7" }}'
             - name: RESTIC_KEEP_WEEKLY
-              value: "4"
+              value: '{{ ($value.resticKeep).weekly | default "4" }}'
             - name: RESTIC_KEEP_MONTHLY
-              value: "12"
+              value: '{{ ($value.resticKeep).monthly | default "12" }}'
             - name: RESTIC_KEEP_YEARLY
-              value: "4"
+              value: '{{ ($value.resticKeep).yearly | default "4" }}'
           restartPolicy: OnFailure
 {{- end }}
