@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -e
+
+setup.sh
+
+mkdir -p "/pg_dump"
+
+echo "Receiving latest database backup from S3"
+while ! restic restore latest --host "$DB_RESTIC_NAME" --target "/pg_dump"; do
+	echo "Sleeping for 10 seconds before retry..."
+	sleep 10
+done
+
+echo 'Finished receiving database backups from S3'
+
+echo "Restoring database cluster: $PGUSER@$PGHOST:$PGPORT"
+
+# Wait for PostgreSQL to become available.
+COUNT=0
+until psql -l > /dev/null 2>&1; do
+	if [[ "$COUNT" == 0 ]]; then
+		echo "Waiting for PostgreSQL to become available..."
+	fi
+	(( COUNT += 1 ))
+	sleep 1
+done
+if (( COUNT > 0 )); then
+	echo "Waited $COUNT seconds."
+fi
+
+echo "Restoring database '$PGDATABASE'"
+pg_restore --no-owner --role=app --verbose -d $PGDATABASE /pg_dump/$PGDATABASE.dump
+
+rm -rf "/pg_dump"

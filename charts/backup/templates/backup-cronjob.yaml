@@ -21,6 +21,8 @@ spec:
             - secretRef:
                 name: {{ $value.resticSecretName }}
             env:
+            - name: DB_RESTIC_NAME
+              value: {{ $value.namespace}}-{{ $value.name }}
             - name: PGHOST
               valueFrom:
                 secretKeyRef:

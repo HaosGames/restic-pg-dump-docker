@@ -4,15 +4,7 @@ set -e
 
 setup.sh
 
-# No more databases.
-for var in PGHOST PGUSER; do
-	[[ -z "${!var}" ]] && {
-		echo 'Finished backup successfully'
-		exit 0
-	}
-done
-
-echo "Dumping database cluster $i: $PGUSER@$PGHOST:$PGPORT"
+echo "Dumping database cluster: $PGUSER@$PGHOST:$PGPORT"
 
 # Wait for PostgreSQL to become available.
 COUNT=0
@@ -37,7 +29,7 @@ pg_dump -Fc -f /pg_dump/$PGDATABASE.dump $PGDATABASE || true  # Ignore failures
 # pg_dumpall --file="/pg_dump/!globals.sql" --globals-only
 
 echo "Sending database dumps to S3"
-while ! restic backup --host "$PGHOST" "/pg_dump"; do
+while ! restic backup --host "$DB_RESTIC_NAME" "/pg_dump"; do
 	echo "Sleeping for 10 seconds before retry..."
 	sleep 10
 done

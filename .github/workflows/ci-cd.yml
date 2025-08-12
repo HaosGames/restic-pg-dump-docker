@@ -30,13 +30,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Chart | Push
+    - name: Backup Chart | Push
       uses: appany/helm-oci-chart-releaser@v0.5.0
       with:
         name: pg-dump-restic-backup-chart
         repository: haosgames/restic-pg-dump-docker
         tag: 0.1.0
         path: charts/backup # Default charts/{name}
+        registry: ghcr.io
+        registry_username: hasgames
+        registry_password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Restore Chart | Push
+      uses: appany/helm-oci-chart-releaser@v0.5.0
+      with:
+        name: pg-restore-restic-backup-chart
+        repository: haosgames/restic-pg-dump-docker
+        tag: 0.1.0
+        path: charts/restore # Default charts/{name}
         registry: ghcr.io
         registry_username: hasgames
         registry_password: ${{ secrets.GITHUB_TOKEN }}
