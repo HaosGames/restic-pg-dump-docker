@@ -5,28 +5,19 @@ set -e
 kind delete cluster -n cnpg-dev
 kind create cluster -n cnpg-dev
 
+kubectl apply -f test/restic-secret.yaml
+kubectl apply -f test/persistent-volume.yaml
+kubectl apply -f test/persistent-volume-claim.yaml
+
 # Install CloudNativePG operator
 kubectl apply --server-side -f \
   https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.26/releases/cnpg-1.26.1.yaml
-
-# Wait for operator namespace to be created
-echo "Waiting for cnpg-system namespace..."
-until kubectl get namespace cnpg-system >/dev/null 2>&1; do
-    sleep 2
-done
 
 # Wait for operator deployment to be ready
 echo "Waiting for CloudNativePG operator deployment to be ready..."
 kubectl -n cnpg-system wait --for=condition=available deployment --all --timeout=120s
 
-# Show pod status for debugging
-echo "Current pods in cnpg-system namespace:"
-kubectl get pods -n cnpg-system
-
-echo "Creating PostgreSQL cluster..."
 kubectl apply -f test/pg-cluster.yaml
-kubectl apply -f test/restic-secret.yaml
-kubectl apply -f test/persistent-volume-claim.yaml
 
 until kubectl wait --for=condition=ready pod -l cnpg.io/cluster=cluster-example,cnpg.io/podRole=instance --timeout=10s; do
 	echo "Sleeping for 10 seconds before retry..."
