@@ -7,7 +7,7 @@ restores:
 
 extraVolumes:
   - name: restic-test-repo
-    persistantVolumeClaim:
+    persistentVolumeClaim:
       claimName: restic-test-repo
 
 extraVolumeMounts:

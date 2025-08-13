@@ -67,7 +67,12 @@ done
 
 helm upgrade --install -f test/helm-values-restore.yaml restore ./charts/restore
 
-# Verify test table exists in restored cluster
+echo "Waiting for the restore job to complete..."
+until kubectl wait --for=condition=complete pod -l batch.kubernetes.io/job-name=restic-restore-example --timeout=300s; do
+	echo "Sleeping for 10 seconds before retry..."
+	sleep 10
+done
+
 echo "Verifying test table in restored cluster..."
 kubectl exec -it cluster-restored-1 -- psql -U postgres -d app -c "\dt test_backup"
 kubectl exec -it cluster-restored-1 -- psql -U postgres -d app -c "SELECT * FROM test_backup;"
