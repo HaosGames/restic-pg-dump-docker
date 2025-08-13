@@ -2,7 +2,7 @@
 
 set -e
 
-setup.sh
+setup-restore.sh
 
 mkdir -p "/pg_dump"
 

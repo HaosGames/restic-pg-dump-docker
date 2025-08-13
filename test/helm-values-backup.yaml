@@ -12,4 +12,4 @@ extraVolumes:
 
 extraVolumeMounts:
   - name: restic-test-repo
-    mountPath: "/restic-repo"
+    mountPath: "/restic-test-repo"

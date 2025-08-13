@@ -26,9 +26,9 @@ kubectl get pods -n cnpg-system
 echo "Creating PostgreSQL cluster..."
 kubectl apply -f test/pg-cluster.yaml
 kubectl apply -f test/restic-secret.yaml
-kubectl apply -f test/persistant-volume-claim.yaml
+kubectl apply -f test/persistent-volume-claim.yaml
 
-until kubectl wait --for=condition=ready pod -l cnpg.io/cluster=cluster-example -l cnpg.io/podRole=instance --timeout=10s; do
+until kubectl wait --for=condition=ready pod -l cnpg.io/cluster=cluster-example,cnpg.io/podRole=instance --timeout=10s; do
 	echo "Sleeping for 10 seconds before retry..."
 	sleep 10
 done
@@ -48,7 +48,7 @@ helm upgrade --install -f test/helm-values-backup.yaml backup ./charts/backup
 # Manually trigger the backup cronjob
 echo "Triggering backup cronjob..."
 BACKUP_JOB_NAME="manual-backup-$(date +%s)"
-kubectl create job --from=cronjob/backup-cronjob "$BACKUP_JOB_NAME"
+kubectl create job --from=cronjob/restic-backup-example "$BACKUP_JOB_NAME"
 
 # Wait for the backup job to complete
 echo "Waiting for backup job $BACKUP_JOB_NAME to complete..."
@@ -60,7 +60,7 @@ done
 # Create a new cluster for restore
 kubectl apply -f test/pg-cluster-restore.yaml
 
-until kubectl wait --for=condition=ready pod -l cnpg.io/cluster=cluster-restored -l cnpg.io/podRole=instance --timeout=10s; do
+until kubectl wait --for=condition=ready pod -l cnpg.io/cluster=cluster-restored,cnpg.io/podRole=instance --timeout=10s; do
 	echo "Sleeping for 10 seconds before retry..."
 	sleep 10
 done

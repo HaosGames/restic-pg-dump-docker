@@ -4,6 +4,7 @@ restores:
     dbAppConfig: cluster-restored-app
     resticSecretName: restic-secret
 
+
 extraVolumes:
   - name: restic-test-repo
     persistantVolumeClaim:
@@ -11,4 +12,4 @@ extraVolumes:
 
 extraVolumeMounts:
   - name: restic-test-repo
-    mountPath: "/restic-repo"
+    mountPath: "/restic-test-repo"
