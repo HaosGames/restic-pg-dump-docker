@@ -9,19 +9,29 @@ kind create cluster -n cnpg-dev
 kubectl apply --server-side -f \
   https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.26/releases/cnpg-1.26.1.yaml
 
-# Wait for operator to be ready
-echo "Waiting for CloudNativePG operator to be ready..."
-kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=cloudnative-pg -n cnpg-system --timeout=120s
+# Wait for operator namespace to be created
+echo "Waiting for cnpg-system namespace..."
+until kubectl get namespace cnpg-system >/dev/null 2>&1; do
+    sleep 2
+done
 
-# Create initial PostgreSQL cluster
+# Wait for operator deployment to be ready
+echo "Waiting for CloudNativePG operator deployment to be ready..."
+kubectl -n cnpg-system wait --for=condition=available deployment --all --timeout=120s
+
+# Show pod status for debugging
+echo "Current pods in cnpg-system namespace:"
+kubectl get pods -n cnpg-system
+
+echo "Creating PostgreSQL cluster..."
 kubectl apply -f test/pg-cluster.yaml
 kubectl apply -f test/restic-secret.yaml
+kubectl apply -f test/persistant-volume-claim.yaml
 
-# Wait for PostgreSQL cluster to be ready
-echo "Waiting for PostgreSQL cluster to be ready..."
-kubectl wait --for=condition=ready pod -l cnpg.io/cluster=cluster-example -l cnpg.io/jobRole=initdb --timeout=300s
-sleep 10
-kubectl wait --for=condition=ready pod -l cnpg.io/cluster=cluster-example -l cnpg.io/podRole=instance --timeout=300s
+until kubectl wait --for=condition=ready pod -l cnpg.io/cluster=cluster-example -l cnpg.io/podRole=instance --timeout=10s; do
+	echo "Sleeping for 10 seconds before retry..."
+	sleep 10
+done
 
 # Create test table and insert data
 echo "Creating test table..."
@@ -33,38 +43,29 @@ CREATE TABLE test_backup (
 );
 INSERT INTO test_backup (name) VALUES ('test1'), ('test2');"
 
-# Install backup chart
 helm upgrade --install -f test/helm-values-backup.yaml backup ./charts/backup
 
 # Manually trigger the backup cronjob
 echo "Triggering backup cronjob..."
-kubectl create job --from=cronjob/restic-backup-example manual-backup
+BACKUP_JOB_NAME="manual-backup-$(date +%s)"
+kubectl create job --from=cronjob/backup-cronjob "$BACKUP_JOB_NAME"
 
-echo "Waiting for backup job to complete..."
-kubectl wait --for=condition=complete job -l job-name=manual-backup --timeout=300s
-
-# Verify backup job succeeded
-if [[ $(kubectl get jobs -l job-name=manual-backup -o jsonpath='{.items[].status.succeeded}') != "1" ]]; then
-    echo "Backup job failed!"
-    kubectl logs job/$(kubectl get jobs -l job-name=manual-backup -o jsonpath='{.items[].metadata.name}')
-    exit 1
-fi
-
-echo "Backup completed successfully!"
+# Wait for the backup job to complete
+echo "Waiting for backup job $BACKUP_JOB_NAME to complete..."
+until kubectl wait --for=condition=complete "job/$BACKUP_JOB_NAME" --timeout=300s; do
+	echo "Sleeping for 10 seconds before retry..."
+	sleep 10
+done
 
 # Create a new cluster for restore
 kubectl apply -f test/pg-cluster-restore.yaml
 
-# Wait for restored cluster to be ready
-echo "Waiting for restored cluster to be ready..."
-kubectl wait --for=condition=ready pod -l cnpg.io/cluster=cluster-restored -l cnpg.io/jobRole=initdb --timeout=300s
-sleep 10
-kubectl wait --for=condition=ready pod -l cnpg.io/cluster=cluster-restored -l cnpg.io/podRole=instance --timeout=300s
+until kubectl wait --for=condition=ready pod -l cnpg.io/cluster=cluster-restored -l cnpg.io/podRole=instance --timeout=10s; do
+	echo "Sleeping for 10 seconds before retry..."
+	sleep 10
+done
 
-# Restore backup
-helm upgrade --install -f test/helm-values-restore.yaml backup ./charts/restore
-echo "Waiting for backup job to complete..."
-kubectl wait --for=condition=complete job -l job-name=restic-restore-example --timeout=300s
+helm upgrade --install -f test/helm-values-restore.yaml restore ./charts/restore
 
 # Verify test table exists in restored cluster
 echo "Verifying test table in restored cluster..."

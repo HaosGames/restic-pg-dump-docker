@@ -3,3 +3,12 @@ restores:
     namespace: default
     dbAppConfig: cluster-restored-app
     resticSecretName: restic-secret
+
+extraVolumes:
+  - name: restic-test-repo
+    persistantVolumeClaim:
+      claimName: restic-test-repo
+
+extraVolumeMounts:
+  - name: restic-test-repo
+    mountPath: "/restic-repo"

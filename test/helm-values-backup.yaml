@@ -4,3 +4,12 @@ backups:
     dbAppConfig: cluster-example-app
     resticSecretName: restic-secret
     schedule: "*/5 * * * *"
+
+extraVolumes:
+  - name: restic-test-repo
+    persistantVolumeClaim:
+      claimName: restic-test-repo
+
+extraVolumeMounts:
+  - name: restic-test-repo
+    mountPath: "/restic-repo"

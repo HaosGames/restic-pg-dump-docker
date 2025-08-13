@@ -11,10 +11,16 @@ spec:
     spec:
       template:
         spec:
+          {{ if .Values.extraVolumes }}
+          volumes: {{ .Values.extraVolumes }}
+          {{ end }}
           containers:
           - name: restic-backup
             image: ghcr.io/haosgames/restic-pg-dump-docker:latest
             imagePullPolicy: IfNotPresent
+            {{ if .Values.extraVolumeMounts }}
+            volumeMounts: {{ .Values.extraVolumeMounts }}
+            {{ end }}
             command:
             - backup.sh
             envFrom:
