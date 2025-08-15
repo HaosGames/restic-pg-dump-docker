@@ -18,7 +18,7 @@ done
 echo 'Finished receiving database backups from S3'
 
 echo "Listing contents of /pg_dump:"
-ls -la /pg_dump
+ls -la /pg_dump/*
 
 echo "Restoring database cluster: $PGUSER@$PGHOST:$PGPORT"
 
@@ -36,6 +36,6 @@ if (( COUNT > 0 )); then
 fi
 
 echo "Restoring database '$PGDATABASE'"
-pg_restore --no-owner --role=app --verbose -d $PGDATABASE /pg_dump/$PGDATABASE.dump
+pg_restore --no-owner --role=app --verbose -d $PGDATABASE /pg_dump/pg_dump/$PGDATABASE.dump
 
 rm -rf "/pg_dump"
