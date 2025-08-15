@@ -9,6 +9,11 @@ for var in AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY RESTIC_PASSWORD RESTIC_REPOSI
 	}
 done
 
-if ! restic unlock; then
-	restic init
+# First try to check if repository exists
+if ! restic snapshots &>/dev/null; then
+    echo "Repository does not exist, initializing..."
+    restic init
+else
+    echo "Repository exists, checking for locks..."
+    restic unlock
 fi
