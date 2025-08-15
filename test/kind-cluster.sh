@@ -32,7 +32,9 @@ CREATE TABLE test_backup (
     name VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-INSERT INTO test_backup (name) VALUES ('test1'), ('test2');"
+INSERT INTO test_backup (name) VALUES ('test1'), ('test2');
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;"
 
 helm upgrade --install -f test/helm-values-backup.yaml backup ./charts/backup
 
