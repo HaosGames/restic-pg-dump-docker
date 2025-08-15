@@ -1,10 +1,28 @@
 #!/bin/bash
 set -e
 
-# Delete existing cluster and create new one
-kind delete cluster -n cnpg-dev
-kind create cluster -n cnpg-dev
+# Check if the cluster exists, if not create it
+if ! kind get clusters | grep -q "cnpg-dev"; then
+    echo "Creating kind cluster..."
+    kind create cluster -n cnpg-dev
+fi
 
+# Cleanup previous test resources
+echo "Cleaning up previous test resources..."
+kubectl delete job --ignore-not-found=true --all
+kubectl delete cronjob --ignore-not-found=true restic-backup-example
+kubectl delete cluster --ignore-not-found=true cluster-example cluster-restored
+kubectl delete -f test/persistent-volume-claim.yaml --ignore-not-found=true
+kubectl delete -f test/persistent-volume.yaml --ignore-not-found=true
+kubectl delete -f test/restic-secret.yaml --ignore-not-found=true
+helm uninstall backup --ignore-not-found=true
+helm uninstall restore --ignore-not-found=true
+
+# Wait for resources to be deleted
+echo "Waiting for resources to be deleted..."
+sleep 10
+
+# Apply resources
 kubectl apply -f test/restic-secret.yaml
 kubectl apply -f test/persistent-volume.yaml
 kubectl apply -f test/persistent-volume-claim.yaml
