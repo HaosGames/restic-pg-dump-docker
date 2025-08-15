@@ -34,7 +34,10 @@ CREATE TABLE test_backup (
 );
 INSERT INTO test_backup (name) VALUES ('test1'), ('test2');
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;"
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;
+GRANT SELECT, USAGE ON ALL SEQUENCES IN SCHEMA public TO app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, USAGE ON SEQUENCES TO app;
+"
 
 helm upgrade --install -f test/helm-values-backup.yaml backup ./charts/backup
 
