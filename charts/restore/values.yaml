@@ -3,3 +3,5 @@
 #     namespace: default
 #     dbAppConfig: cluster-example-app
 #     resticSecretName: restic-secret
+
+imagePullPolicy: IfNotPresent

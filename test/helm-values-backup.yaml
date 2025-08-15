@@ -13,3 +13,5 @@ extraVolumes:
 extraVolumeMounts:
   - name: restic-test-repo
     mountPath: "/restic-test-repo"
+
+imagePullPolicy: Always
