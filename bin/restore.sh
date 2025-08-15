@@ -6,13 +6,19 @@ setup-restore.sh
 
 mkdir -p "/pg_dump"
 
+echo "Checking available snapshots:"
+restic snapshots
+
 echo "Receiving latest database backup from S3"
-while ! restic restore latest --host "$DB_RESTIC_NAME" --target "/pg_dump"; do
+while ! restic restore latest --host "$DB_RESTIC_NAME" --target "/pg_dump" --verbose; do
 	echo "Sleeping for 10 seconds before retry..."
 	sleep 10
 done
 
 echo 'Finished receiving database backups from S3'
+
+echo "Listing contents of /pg_dump:"
+ls -la /pg_dump
 
 echo "Restoring database cluster: $PGUSER@$PGHOST:$PGPORT"
 
