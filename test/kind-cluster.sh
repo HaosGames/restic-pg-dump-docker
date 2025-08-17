@@ -42,20 +42,15 @@ until kubectl wait --for=condition=ready pod -l cnpg.io/cluster=cluster-example,
 	sleep 10
 done
 
-# Create test table and insert data
+# Create test table and insert data as the app user
 echo "Creating test table..."
-kubectl exec -it cluster-example-1 -- psql -U postgres -d app -c "
+kubectl exec -it cluster-example-1 -- psql -U app -d app -c "
 CREATE TABLE test_backup (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-INSERT INTO test_backup (name) VALUES ('test1'), ('test2');
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app;
-GRANT SELECT, USAGE ON ALL SEQUENCES IN SCHEMA public TO app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, USAGE ON SEQUENCES TO app;
-"
+INSERT INTO test_backup (name) VALUES ('test1'), ('test2');"
 
 helm upgrade --install -f test/helm-values-backup.yaml backup ./charts/backup
 
@@ -88,7 +83,7 @@ until kubectl wait --for=condition=complete job/restic-restore-example --timeout
 done
 
 echo "Verifying test table in restored cluster..."
-kubectl exec -it cluster-restored-1 -- psql -U postgres -d app -c "\dt test_backup"
-kubectl exec -it cluster-restored-1 -- psql -U postgres -d app -c "SELECT * FROM test_backup;"
+kubectl exec -it cluster-restored-1 -- psql -U app -d app -c "\dt test_backup"
+kubectl exec -it cluster-restored-1 -- psql -U app -d app -c "SELECT * FROM test_backup;"
 
 echo "Test completed successfully!"
