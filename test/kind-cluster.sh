@@ -82,7 +82,7 @@ done
 helm upgrade --install -f test/helm-values-restore.yaml restore ./charts/restore
 
 echo "Waiting for the restore job to complete..."
-until kubectl wait --for=condition=complete pod -l batch.kubernetes.io/job-name=restic-restore-example --timeout=300s; do
+until kubectl wait --for=condition=complete job/restic-restore-example --timeout=300s; do
 	echo "Sleeping for 10 seconds before retry..."
 	sleep 10
 done

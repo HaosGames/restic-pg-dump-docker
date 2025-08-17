@@ -45,4 +45,6 @@ pg_restore \
     -d $PGDATABASE \
     /pg_dump/pg_dump/$PGDATABASE.dump
 
+echo "Restore complete"
+
 rm -rf "/pg_dump"
