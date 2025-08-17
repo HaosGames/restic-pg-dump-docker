@@ -30,6 +30,8 @@ spec:
           value: {{ $value.namespace }}-{{ $value.name }}
         - name: DO_CLEANUP
           value: {{ $value.doCleanup | quote | default "false" }}
+        - name: RESTIC_SNAPSHOT_ID
+          value: {{ $value.snapshotID | default "latest" }}
         - name: PGHOST
           valueFrom:
             secretKeyRef:

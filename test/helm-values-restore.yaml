@@ -4,6 +4,7 @@ restores:
     dbAppConfig: cluster-restored-app
     resticSecretName: restic-secret
     doCleanup: true
+    snapshotID: latest
 
 
 extraVolumes:

@@ -4,5 +4,6 @@
 #     dbAppConfig: cluster-example-app
 #     resticSecretName: restic-secret
 #     doCleanup: true # cleanup db before restore
+#     snapshotID: latest
 
 imagePullPolicy: IfNotPresent

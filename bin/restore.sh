@@ -10,7 +10,7 @@ echo "Checking available snapshots:"
 restic snapshots
 
 echo "Receiving latest database backup from S3"
-while ! restic restore latest --host "$DB_RESTIC_NAME" --target "/pg_dump" --verbose; do
+while ! restic restore $RESTIC_SNAPSHOT_ID --host "$DB_RESTIC_NAME" --target "/pg_dump" --verbose; do
 	echo "Sleeping for 10 seconds before retry..."
 	sleep 10
 done
