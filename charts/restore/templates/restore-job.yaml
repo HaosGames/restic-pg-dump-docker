@@ -28,10 +28,8 @@ spec:
         env:
         - name: DB_RESTIC_NAME
           value: {{ $value.namespace }}-{{ $value.name }}
-        {{- if $value.doCleanup | default false -}}
         - name: DO_CLEANUP
-          value: true
-        {{- end -}}
+          value: {{ $value.doCleanup | quote | default "false" }}
         - name: PGHOST
           valueFrom:
             secretKeyRef:
