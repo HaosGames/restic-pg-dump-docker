@@ -1,100 +1,132 @@
-# restic-pg-dump
+# restic-pg-dump-docker
 
-Docker image that runs `pg_dump` individually for every database on a given server and saves incremental encrypted backups via [restic].
+Docker image that performs PostgreSQL database backups using [restic] for CloudNativePG clusters in Kubernetes. The image provides both backup and restore capabilities, using pg_dump in custom format (-Fc) for efficient backups.
 
-By default:
+## Features
 
-- Uses S3 as restic repository backend.
-- Runs every hour via cron job.
-- Keeps 24 latest, 7 daily, 4 weekly, and 12 monthly snapshots.
-- Prunes old snapshots every week.
+- Uses S3 as restic repository backend
+- Configurable backup schedule via Kubernetes CronJob
+- Restore functionality via Kubernetes Job
+- Designed for CloudNativePG database clusters
+- Uses pg_dump's custom format for efficient backups
+- Incremental backups using restic
 
-**NOTE:** Pruning requires an exclusive lock, and should be done infrequently from a single host.
+## Prerequisites
 
+- Kubernetes cluster
+- CloudNativePG operator installed
+- Helm 3.x
+- kubectl
+- S3 bucket and credentials
 
-# Usage
+## Installation
 
-Run:
+The project provides two Helm charts:
 
-    $ docker run \
-    -d \
-    -e AWS_ACCESS_KEY_ID='...' \
-    -e AWS_SECRET_ACCESS_KEY='...' \
-    -e PGHOST='...' \
-    -e PGPASSWORD='...' \
-    -e PGUSER='...' \
-    -e RESTIC_PASSWORD='...' \
-    -e RESTIC_REPOSITORY='s3:s3.amazonaws.com/...' \
-    --name restic-pg-dump \
-    --restart always \
-    interaction/restic-pg-dump
+### Backup Chart
 
-You can also pass the following environment variables to override the defaults:
+```bash
+helm install backup ./charts/backup -f values.yaml
+```
 
-    -e RESTIC_BACKUP_SCHEDULE='0 * * * *'  # Hourly
-    -e RESTIC_PRUNE_SCHEDULE='0 14 * * 0'  # Sunday midnight, AEST. Use '' to disable.
-    -e PGPORT='5432'
-    -e RESTIC_KEEP_HOURLY='24'
-    -e RESTIC_KEEP_DAILY='7'
-    -e RESTIC_KEEP_WEEKLY='4'
-    -e RESTIC_KEEP_MONTHLY='12'
-    -e RESTIC_KEEP_YEARLY='7'
+Example values.yaml for backup:
+```yaml
+backups:
+  - name: example
+    namespace: default
+    dbAppConfig: cluster-example-app  # Secret with database credentials
+    resticSecretName: restic-secret  # Secret with restic configuration
+    schedule: "0 * * * *"  # Hourly backup
+```
 
-You can backup 5 different database clusters with `PG*_[1..5]`, and assign an arbitrary hostname with `HOSTNAME_[1..5]` (if `PGHOST` is not a fully qualified domain name) environment variables.
+### Restore Chart
 
-    -e HOSTNAME_2='...'
-    -e PGHOST_2='...'
-    -e PGPASSWORD_2='...'
-    -e PGPORT_2='5432'
-    -e PGUSER_2='...'
+```bash
+helm install restore ./charts/restore -f values.yaml
+```
 
-A `docker-compose.yml` file is provided for convenience.
+Example values.yaml for restore:
+```yaml
+restores:
+  - name: example
+    namespace: default
+    dbAppConfig: cluster-restored-app  # Secret with database credentials
+    resticSecretName: restic-secret  # Secret with restic configuration
+    doCleanup: true # Cleanup db before restore. Defaults to false
+    snapshotID: latest # Restore specific snapshotID. Defaults to latest
+```
 
+## Required Secrets
 
-# Restore (macOS)
+### Database Credentials (Created by CloudNativePG)
+CloudNativePG automatically creates secrets containing database credentials. These are referenced in the `dbAppConfig` values.
 
-Create a `.envrc` file from `.envrc.example` and update with your AWS, PostgreSQL and Restic credentials.
+### Restic Configuration
+Create a secret with restic and S3 configuration:
 
-    $ wget https://raw.githubusercontent.com/ixc/restic-pg-dump/master/.envrc.example -O .envrc
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: restic-secret
+data:
+  RESTIC_REPOSITORY: base64-encoded-s3-url  # e.g., s3:s3.amazonaws.com/bucket-name/path
+  RESTIC_PASSWORD: base64-encoded-password # used for client-side encryption of the db-dump
+  AWS_ACCESS_KEY_ID: base64-encoded-key
+  AWS_SECRET_ACCESS_KEY: base64-encoded-secret
+```
 
-Restrict access to `.envrc`, because it contains AWS and restic credentials:
+## Usage
 
-    $ chmod 600 .envrc
+### Creating a Backup
 
-Install [direnv] via [Homebrew] and configure to ensure your `.envrc` file is always sourced when you change to this directory:
+Backups run automatically according to the schedule. To trigger a manual backup:
 
-    $ brew install direnv
-    $ eval "$(direnv hook bash)"  # Change bash to zsh/fish/tcsh, if necessary, and add to your shell's RC file
-    $ direnv allow
+```bash
+kubectl create job --from=cronjob/restic-backup-example manual-backup
+```
 
-Install [restic] via [Homebrew]:
+### Performing a Restore
 
-    $ brew install restic
+Deploy the restore chart to restore the latest backup:
 
-List snapshots:
+```bash
+helm install restore ./charts/restore -f values.yaml
+```
 
-    $ restic snapshots
+### Monitoring
 
-Restore the latest snapshot for a given server:
+Check backup/restore status:
 
-    $ restic restore --host {HOSTNAME} --target "restore/{HOSTNAME}" latest
+```bash
+# For backup jobs
+kubectl logs -l job-name=restic-backup-example
 
-Restore files matching a pattern from latest snapshot for a given server:
+# For restore jobs
+kubectl logs -l job-name=restic-restore-example
+```
 
-    $ restic restore --host "{HOSTNAME}" --target "restore/{HOSTNAME}" --include '*-production.sql' latest
+## Testing
 
-Mount the restic repository via fuse (read-only):
+The project includes a test environment using Kind:
 
-    $ restic mount mnt
+```bash
+./test/kind-cluster.sh
+```
 
-Then, access the latest snapshot from another terminal:
+This script:
+1. Creates a Kind cluster
+2. Installs CloudNativePG operator
+3. Creates test PostgreSQL clusters
+4. Sets up a local persistent volume for testing (not needed for production S3 usage)
+5. Performs test backup and restore operations
 
-    $ ls -l "mnt/hosts/{HOSTNAME}/latest"
-    $ psql -f "mnt/hosts/{HOSTNAME}/latest/pg_dump/{DBNAME}.sql" {DBNAME}
+The test environment uses a local persistent volume instead of S3 for easier testing. The volume configuration can be found in the test directory and is not required for production use with S3.
 
-**WARNING:** Mounting the restic repository via fuse will open an exclusive lock and prevent all scheduled backups until the lock is released.
+## Important Notes
 
+- Tables should be created as the app user to avoid permission issues with backup/restore
+- The S3 bucket should have appropriate permissions for the provided AWS credentials
+- Backup and restore operations use the same database user credentials as the application
 
-[direnv]: https://direnv.net/
-[Homebrew]: https://brew.sh/
 [restic]: https://restic.net/
