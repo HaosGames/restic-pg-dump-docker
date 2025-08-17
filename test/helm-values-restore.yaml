@@ -3,6 +3,7 @@ restores:
     namespace: default
     dbAppConfig: cluster-restored-app
     resticSecretName: restic-secret
+    doCleanup: true
 
 
 extraVolumes:

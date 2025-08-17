@@ -35,11 +35,16 @@ if (( COUNT > 0 )); then
 	echo "Waited $COUNT seconds."
 fi
 
+if [[ $DO_CLEANUP == "true" ]]; then
+	CLEAN_ARG="--clean --if-exists"
+fi
+
 echo "Restoring database '$PGDATABASE'"
 pg_restore \
     --no-owner \
     --role=app \
     --verbose \
+	$CLEAN_ARG \
     -d $PGDATABASE \
     /pg_dump/pg_dump/$PGDATABASE.dump
 
