@@ -39,8 +39,6 @@ echo "Restoring database '$PGDATABASE'"
 pg_restore \
     --no-owner \
     --role=app \
-    --no-privileges \
-    --no-acl \
     --verbose \
     -d $PGDATABASE \
     /pg_dump/pg_dump/$PGDATABASE.dump
