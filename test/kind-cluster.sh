@@ -42,9 +42,12 @@ until kubectl wait --for=condition=ready pod -l cnpg.io/cluster=cluster-example,
 	sleep 10
 done
 
-# Create test table and insert data as the app user
+# Get app user credentials from secret
+APP_PASSWORD=$(kubectl get secret cluster-example-app -o jsonpath='{.data.password}' | base64 -d)
+
+# Create test table and insert data as the app user using the correct credentials
 echo "Creating test table..."
-kubectl exec -it cluster-example-1 -- psql -U app -d app -c "
+kubectl exec -it cluster-example-1 -- env PGPASSWORD="$APP_PASSWORD" psql -h localhost -U app -d app -c "
 CREATE TABLE test_backup (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50),
@@ -82,8 +85,11 @@ until kubectl wait --for=condition=complete job/restic-restore-example --timeout
 	sleep 10
 done
 
+# Get app user credentials for restored cluster
+RESTORED_APP_PASSWORD=$(kubectl get secret cluster-restored-app -o jsonpath='{.data.password}' | base64 -d)
+
 echo "Verifying test table in restored cluster..."
-kubectl exec -it cluster-restored-1 -- psql -U app -d app -c "\dt test_backup"
-kubectl exec -it cluster-restored-1 -- psql -U app -d app -c "SELECT * FROM test_backup;"
+kubectl exec -it cluster-restored-1 -- env PGPASSWORD="$RESTORED_APP_PASSWORD" psql -h localhost -U app -d app -c "\dt test_backup"
+kubectl exec -it cluster-restored-1 -- env PGPASSWORD="$RESTORED_APP_PASSWORD" psql -h localhost -U app -d app -c "SELECT * FROM test_backup;"
 
 echo "Test completed successfully!"
