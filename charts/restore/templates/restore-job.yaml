@@ -3,7 +3,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: restic-restore-{{ $value.name }}
+  name: restic-restore-{{ $value.name }}-{{ $value.jobIteration | default 1 }}
   namespace: {{ $value.namespace }}
 spec:
   template:
