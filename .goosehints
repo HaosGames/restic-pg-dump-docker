@@ -1,0 +1,63 @@
+# restic-pg-dump-docker
+
+This project provides a Docker container that can perform PostgreSQL database backups using restic.
+The container is designed to work in Kubernetes with CloudNativePG clusters.
+
+## Project Structure
+
+- `/bin`: Contains shell scripts for backup and restore operations
+  - `backup.sh`: Main backup script
+  - `restore.sh`: Main restore script
+  - `setup.sh`: Sets up restic repository
+  - `setup-restore.sh`: Prepares for restore operation
+  - `prune.sh`: Handles backup retention
+  - `crond.sh`: Manages scheduled backups
+  - `entrypoint.sh`: Container entrypoint
+
+- `/charts`: Helm charts for deploying backup and restore operations
+  - `/backup`: Chart for scheduled backups
+  - `/restore`: Chart for restore operations
+
+- `/test`: Testing resources and configurations
+  - `kind-cluster.sh`: Sets up test environment with Kind
+  - `pg-cluster.yaml`: CloudNativePG cluster configuration
+  - `pg-cluster-restore.yaml`: Cluster configuration for restore testing
+  - `persistent-volume.yaml`: PV for restic repository
+  - `persistent-volume-claim.yaml`: PVC for restic repository
+  - `restic-secret.yaml`: Restic credentials and configuration
+  - `helm-values-backup.yaml`: Values for backup chart
+  - `helm-values-restore.yaml`: Values for restore chart
+
+## Key Components
+
+1. **Restic Repository**: Uses persistent volume to store backups
+2. **Database Access**: Uses app user credentials from CloudNativePG secrets
+3. **Backup Process**: Creates pg_dump in custom format, stores in restic repo
+4. **Restore Process**: Retrieves backup from restic, restores using pg_restore
+
+## Common Operations
+
+1. Running tests:
+```bash
+./test/kind-cluster.sh
+```
+
+2. Manual backup:
+```bash
+kubectl create job --from=cronjob/restic-backup-example manual-backup
+```
+
+3. Checking logs:
+```bash
+# For backup
+kubectl logs -l job-name=restic-backup-example
+# For restore
+kubectl logs -l job-name=restic-restore-example
+```
+
+## Important Notes
+
+- The backup process uses pg_dump in custom format (-Fc)
+- Database credentials are sourced from CloudNativePG secrets
+- Tables should be created as app user to avoid permission issues
+- Restic repository persistence requires proper PV/PVC setup
