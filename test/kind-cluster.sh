@@ -11,7 +11,7 @@ fi
 echo "Cleaning up previous test resources..."
 kubectl delete job --ignore-not-found=true --all
 kubectl delete cronjob --ignore-not-found=true restic-backup-example
-kubectl delete cluster --ignore-not-found=true cluster-example cluster-restored
+kubectl delete cluster --ignore-not-found=true cluster-example cluster-restored || true
 kubectl delete -f test/persistent-volume-claim.yaml --ignore-not-found=true
 kubectl delete -f test/persistent-volume.yaml --ignore-not-found=true
 kubectl delete -f test/restic-secret.yaml --ignore-not-found=true
