@@ -14,7 +14,7 @@ spec:
       {{- end }}
       containers:
       - name: restic-backup
-        image: ghcr.io/haosgames/restic-pg-dump-docker:latest
+        image: {{ $.Values.image.repo }}:{{ $.Values.image.tag }}
         imagePullPolicy: {{ $.Values.imagePullPolicy }}
         {{- with $.Values.extraVolumeMounts }}
         volumeMounts:

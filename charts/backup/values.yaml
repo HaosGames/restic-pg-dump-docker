@@ -5,4 +5,7 @@
 #     resticSecretName: restic-secret
 #     schedule: "0 0 * * *"
 
-imagePullPolicy: IfNotPresent
+image:
+  pullPolicy: IfNotPresent
+  tag: latest
+  repo: ghcr.io/haosgames/restic-pg-dump-docker

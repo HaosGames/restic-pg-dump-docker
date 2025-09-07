@@ -8,3 +8,7 @@
 #     jobIteration: 1
 
 imagePullPolicy: IfNotPresent
+image:
+  pullPolicy: IfNotPresent
+  repo: ghcr.io/haosgames/restic-pg-dump-docker
+  tag: latest
