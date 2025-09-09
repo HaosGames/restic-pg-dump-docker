@@ -7,6 +7,8 @@
 #     snapshotID: latest
 #     jobIteration: 1
 
+# Restore is not supported for backups made with pg_dumpall
+
 imagePullPolicy: IfNotPresent
 image:
   pullPolicy: IfNotPresent
