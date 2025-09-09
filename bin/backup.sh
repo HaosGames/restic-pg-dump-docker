@@ -21,9 +21,13 @@ fi
 
 mkdir -p "/pg_dump"
 
-# Dump individual databases directly to restic repository.
-echo "Dumping database '$PGDATABASE'"
-pg_dump -Fc -f /pg_dump/$PGDATABASE.dump $PGDATABASE || true  # Ignore failures
+if [[ "DO_FULL_BACKUP" == "true" ]]; then
+	echo "Dumping enitre instance"
+	pg_dumpall --clean --if-exists -f /pg_dump/$PGDATABASE.dumpall
+else
+	echo "Dumping individual database '$PGDATABASE'"
+	pg_dump -Fc -f /pg_dump/$PGDATABASE.dump $PGDATABASE
+fi
 
 # echo "Dumping global objects for '$PGHOST'"
 # pg_dumpall --file="/pg_dump/!globals.sql" --globals-only
