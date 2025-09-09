@@ -31,6 +31,8 @@ spec:
             env:
             - name: DB_RESTIC_NAME
               value: {{ $value.namespace}}-{{ $value.name }}
+            - name: DO_FULL_BACKUP
+              value: '{{ $value.fullBackup | default "false" | quote }}'
             - name: PGHOST
               valueFrom:
                 secretKeyRef:

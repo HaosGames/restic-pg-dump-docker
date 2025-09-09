@@ -4,6 +4,12 @@ backups:
     dbAppConfig: cluster-example-app
     resticSecretName: restic-secret
     schedule: "*/5 * * * *"
+  - name: example-full
+    namespace: default
+    dbAppConfig: cluster-example-app
+    resticSecretName: restic-secret
+    schedule: "*/5 * * * *"
+    fullBackup: true
 
 extraVolumes:
   - name: restic-test-repo
