@@ -4,8 +4,9 @@
 #     dbAppConfig: cluster-example-app
 #     resticSecretName: restic-secret
 #     schedule: "0 0 * * *"
+#     fullBackup: false
 
 image:
   pullPolicy: IfNotPresent
-  tag: latest
+  tag: master
   repo: ghcr.io/haosgames/restic-pg-dump-docker

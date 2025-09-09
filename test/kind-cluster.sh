@@ -15,6 +15,7 @@ kubectl delete cluster --ignore-not-found=true cluster-example cluster-restored 
 kubectl delete -f test/persistent-volume-claim.yaml --ignore-not-found=true
 kubectl delete -f test/persistent-volume.yaml --ignore-not-found=true
 kubectl delete -f test/restic-secret.yaml --ignore-not-found=true
+kubectl delete -f test/restic-secret-full.yaml --ignore-not-found=true
 helm uninstall backup --ignore-not-found=true
 helm uninstall restore --ignore-not-found=true
 
@@ -24,6 +25,7 @@ sleep 10
 
 # Apply resources
 kubectl apply -f test/restic-secret.yaml
+kubectl apply -f test/restic-secret-full.yaml
 kubectl apply -f test/persistent-volume.yaml
 kubectl apply -f test/persistent-volume-claim.yaml
 
